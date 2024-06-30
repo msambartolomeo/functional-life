@@ -67,7 +67,11 @@ executable functional-life
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.17.2.1
+    build-depends:    
+        base ^>=4.16.4.0,
+        repa ^>=3.4.1.5,
+        sdl2 ^>=2.5.5.0,
+        text,
 
     -- Directories containing source files.
     hs-source-dirs:   app
