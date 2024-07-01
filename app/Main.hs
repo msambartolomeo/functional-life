@@ -5,6 +5,7 @@ import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector (V)
 import Data.Array.Repa.Repr.Vector qualified as Repa
 import Data.Text (Text)
+import Data.Vector (Vector)
 import Data.Vector qualified as Vector
 import Data.Word (Word8)
 import Foreign.C (CInt)
@@ -43,7 +44,7 @@ main = do
 
   rectangles <- computeVector $ getRectanglesFromLife matrix
 
-  SDL.fillRects r $ Vector.convert $ Vector.mapMaybe id $ Repa.toVector rectangles
+  SDL.fillRects r $ Vector.convert $ filterMaybe $ Repa.toVector rectangles
 
   SDL.present r
 
@@ -52,6 +53,9 @@ main = do
   SDL.destroyRenderer r
   SDL.destroyWindow w
   SDL.quit
+
+filterMaybe :: Vector (Maybe a) -> Vector a
+filterMaybe = Vector.mapMaybe id
 
 createWindow :: Text -> (Int, Int) -> IO SDL.Window
 createWindow t s = SDL.createWindow t $ windowConfig s
@@ -77,7 +81,7 @@ instance From Color (SDL.V4 Word8) where
   from :: Color -> SDL.V4 Word8
   --                  R   G   B   a
   from White = SDL.V4 255 255 255 255
-  from Black = SDL.V4 0 0 0 255
+  from Black = SDL.V4 0   0   0   255
 
 getRectanglesFromLife :: Array U DIM2 Life -> Array D DIM1 (Maybe (SDL.Rectangle CInt))
 getRectanglesFromLife arr = Repa.reshape (Z :. size * size) (Repa.traverse arr id (\l (Z :. i :. j) -> rectangle (l (Z :. i :. j)) (i, j)))
