@@ -41,15 +41,9 @@ main = do
 
   SDL.rendererDrawColor r $= from Black
 
-  rectangles <- computeVector (getRectanglesFromLife matrix)
+  rectangles <- computeVector $ getRectanglesFromLife matrix
 
-  let vector = Repa.toVector rectangles
-
-  let rectangles2 = Vector.mapMaybe id vector
-
-  let vector2 = Vector.convert rectangles2
-
-  SDL.fillRects r vector2
+  SDL.fillRects r $ Vector.convert $ Vector.mapMaybe id $ Repa.toVector rectangles
 
   SDL.present r
 
