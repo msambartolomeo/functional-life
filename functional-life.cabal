@@ -73,6 +73,7 @@ executable functional-life
         repa ^>=3.4.1.5,
         sdl2 ^>=2.5.5.0,
         text,
+        vector,
 
     -- Directories containing source files.
     hs-source-dirs:   app
