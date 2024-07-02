@@ -4,16 +4,12 @@ import Data.Array.Repa (Array, D, DIM1, DIM2, Shape, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector (V)
 import Data.Array.Repa.Repr.Vector qualified as Repa
-import Data.Text (Text)
 import Data.Vector (Vector)
 import Data.Vector qualified as Vector
-import Data.Word (Word8)
 import Foreign.C (CInt)
-import SDL (($=))
 import SDL qualified
-
--- data Life = Alive | Dead
-type Life = Bool
+import Sdl qualified
+import Types (Life)
 
 raw :: [Life]
 raw =
@@ -33,55 +29,26 @@ matrix = Repa.fromListUnboxed (Z :. size :. size) raw
 
 main :: IO ()
 main = do
-  SDL.initializeAll
-  w <- createWindow "Functional Life" (640, 480)
-  SDL.showWindow w
-  r <- createRenderer w
+  Sdl.withSdl
+    "Functional Life"
+    (1920, 1080)
+    ( \g -> do
+        Sdl.clearScreen g
 
-  clearScreen r
+        rectangles <- computeVector $ getRectanglesFromLife matrix
 
-  SDL.rendererDrawColor r $= from Black
+        Sdl.fillRectangles g $ filterMaybe $ Repa.toVector rectangles
 
-  rectangles <- computeVector $ getRectanglesFromLife matrix
+        Sdl.present g
 
-  SDL.fillRects r $ Vector.convert $ filterMaybe $ Repa.toVector rectangles
-
-  SDL.present r
-
-  SDL.delay 2000
-
-  SDL.destroyRenderer r
-  SDL.destroyWindow w
-  SDL.quit
+        SDL.delay 2000
+    )
 
 filterMaybe :: Vector (Maybe a) -> Vector a
 filterMaybe = Vector.mapMaybe id
 
-createWindow :: Text -> (Int, Int) -> IO SDL.Window
-createWindow t s = SDL.createWindow t $ windowConfig s
-
-windowConfig :: (Int, Int) -> SDL.WindowConfig
-windowConfig (x, y) = SDL.defaultWindow {SDL.windowInitialSize = fromIntegral <$> SDL.V2 x y}
-
-createRenderer :: SDL.Window -> IO SDL.Renderer
-createRenderer w = SDL.createRenderer w 0 $ SDL.RendererConfig SDL.AcceleratedRenderer False
-
-clearScreen :: SDL.Renderer -> IO ()
-clearScreen r = SDL.rendererDrawColor r $= from White >> SDL.clear r
-
 computeVector :: (Shape a) => Array D a b -> IO (Array V a b)
 computeVector = Repa.computeP
-
-class From a b where
-  from :: a -> b
-
-data Color = White | Black
-
-instance From Color (SDL.V4 Word8) where
-  from :: Color -> SDL.V4 Word8
-  --                  R   G   B   a
-  from White = SDL.V4 255 255 255 255
-  from Black = SDL.V4 0   0   0   255
 
 getRectanglesFromLife :: Array U DIM2 Life -> Array D DIM1 (Maybe (SDL.Rectangle CInt))
 getRectanglesFromLife arr = Repa.reshape (Z :. size * size) (Repa.traverse arr id (\l (Z :. i :. j) -> rectangle (l (Z :. i :. j)) (i, j)))
