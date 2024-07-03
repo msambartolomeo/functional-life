@@ -1,16 +1,11 @@
 module Types where
 
+import Data.Vector.Unboxed.Deriving (derivingUnbox)
 import Data.Word (Word8)
 import SDL (V4 (..))
 
 class From a b where
   from :: a -> b
-
-instance From Bool Int where
-  {-# INLINE from #-}
-  from :: Bool -> Int
-  from True  = 1
-  from False = 0
 
 data Color = White | Black
 
@@ -19,7 +14,34 @@ instance From Color (SDL.V4 Word8) where
   from :: Color -> SDL.V4 Word8
   --                  R   G   B   a
   from White = SDL.V4 255 255 255 255
-  from Black = SDL.V4 0   0   0   255
+  from Black = SDL.V4 0 0 0 255
 
--- data Life = Alive | Dead
-type Life = Bool
+data Life = O | X
+
+join :: Life -> Life -> Life
+join O _ = O
+join X l = l
+
+instance From Life Int where
+  {-# INLINE from #-}
+  from :: Life -> Int
+  from O = 1
+  from X = 0
+
+instance From Life Bool where
+  {-# INLINE from #-}
+  from :: Life -> Bool
+  from O = True
+  from X = False
+
+instance From Bool Life where
+  {-# INLINE from #-}
+  from :: Bool -> Life
+  from True = O
+  from False = X
+
+derivingUnbox
+  "Life"
+  [t|Life -> Bool|]
+  [|from|]
+  [|from|]

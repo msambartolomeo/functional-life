@@ -7,20 +7,15 @@ import Data.Array.Repa.Unsafe qualified as Repa
 import Foreign.C (CInt)
 import SDL qualified
 import Sdl qualified
-import Types (Life)
+import Types (Life (..), join)
 import Types qualified
 
 raw :: [Life]
 raw =
-  [ False,
-    False,
-    True,
-    True,
-    False,
-    True,
-    False,
-    True,
-    True
+  [ 
+    X, X, O,
+    O, X, O,
+    X, O, O
   ]
 
 size :: Int
@@ -45,10 +40,10 @@ cellCount :: Int
 cellCount = height * width
 
 emptyMatrix :: Array U DIM2 Life
-emptyMatrix = Repa.fromListUnboxed (Z :. height :. width) $ take cellCount $ False <$ [0 :: Int ..]
+emptyMatrix = Repa.fromListUnboxed (Z :. height :. width) $ take cellCount $ X <$ [0 :: Int ..]
 
 addLives :: Array U DIM2 Life -> Array U DIM2 Life -> Array D DIM2 Life
-addLives xs ys = Repa.traverse2 xs ys const (\f g i -> safe g i || f i)
+addLives xs ys = Repa.traverse2 xs ys const (\f g i -> safe g i `join` f i)
   where
     (Z :. h :. w) = Repa.extent ys
     safe g (Z :. j :. i) = safeIndex (w, h) g (i, j)
@@ -63,7 +58,7 @@ runLife :: (Source r Life) => Sdl.Sdl -> Array r DIM2 Life -> IO ()
 runLife g b = do
   Sdl.clearScreen g
 
-  alive <- Repa.selectP (Repa.linearIndex b) (coordinatesOfLinearIndex b) (Repa.size (Repa.extent b))
+  alive <- Repa.selectP (Types.from . Repa.linearIndex b) (coordinatesOfLinearIndex b) (Repa.size (Repa.extent b))
 
   rectangles <- Repa.computeP $ Repa.map (rectangle pixelSize) alive
 
@@ -106,10 +101,10 @@ processLife !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + nw)
 
 {-# INLINE safeIndex #-}
 safeIndex :: (Int, Int) -> (DIM2 -> Life) -> (Int, Int) -> Life
-safeIndex (!w, !h) !m (!i, !j) = not (i < 0 || j < 0 || i >= w || j >= h) && m (Z :. j :. i)
+safeIndex (!w, !h) !m (!i, !j) = if i < 0 || j < 0 || i >= w || j >= h then X else m (Z :. j :. i)
 
 {-# INLINE liveOrDie #-}
 liveOrDie :: Life -> Int -> Life
-liveOrDie _ 3 = True
-liveOrDie True 2 = True
-liveOrDie _ _ = False
+liveOrDie _ 3 = O
+liveOrDie O 2 = O
+liveOrDie _ _ = X
