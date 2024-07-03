@@ -4,8 +4,6 @@ import Data.Array.Repa (Array, D, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
 import Data.Array.Repa.Unsafe qualified as Repa
-import Data.Vector.Unboxed (Vector)
-import Data.Vector.Unboxed qualified as Vector
 import Foreign.C (CInt)
 import SDL qualified
 import Sdl qualified
