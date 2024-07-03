@@ -10,7 +10,6 @@ import Sdl qualified
 import Types (Life)
 import Types qualified
 
-
 raw :: [Life]
 raw =
   [ False,
@@ -92,7 +91,6 @@ processLives !xs = Repa.unsafeTraverse xs id processLife
 
 {-# INLINE processLife #-}
 processLife :: (DIM2 -> Life) -> DIM2 -> Life
--- processLife f (Z :. j :. i) | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ") :: " ++ show (f (Z :. j :. i))) False  = undefined
 processLife !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + nw)
   where
     !indexer = Types.from . safeIndex (width, height) f
@@ -108,12 +106,10 @@ processLife !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + nw)
 
 {-# INLINE safeIndex #-}
 safeIndex :: (Int, Int) -> (DIM2 -> Life) -> (Int, Int) -> Life
--- safeIndex _ _  (i, j)        | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ")") False  = undefined
 safeIndex (!w, !h) !m (!i, !j) = not (i < 0 || j < 0 || i >= w || j >= h) && m (Z :. j :. i)
 
 {-# INLINE liveOrDie #-}
 liveOrDie :: Life -> Int -> Life
--- liveOrDie b    n | Debug.trace ("This life is " ++ show b ++ " and has " ++ show n ) False  = undefined
 liveOrDie _ 3 = True
 liveOrDie True 2 = True
 liveOrDie _ _ = False
