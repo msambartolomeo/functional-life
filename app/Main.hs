@@ -8,6 +8,8 @@ import Foreign.C (CInt)
 import SDL qualified
 import Sdl qualified
 import Types (Life)
+import Types qualified
+
 
 raw :: [Life]
 raw =
@@ -91,9 +93,9 @@ processLives !xs = Repa.unsafeTraverse xs id processLife
 {-# INLINE processLife #-}
 processLife :: (DIM2 -> Life) -> DIM2 -> Life
 -- processLife f (Z :. j :. i) | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ") :: " ++ show (f (Z :. j :. i))) False  = undefined
-processLife !f (Z :. !j :. !i) = liveOrDie c $ length $ filter id [n, ne, e, se, s, sw, w, nw]
+processLife !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + nw)
   where
-    !indexer = safeIndex (width, height) f
+    !indexer = Types.from . safeIndex (width, height) f
     !c = f (Z :. j :. i)
     !n = indexer (i, j - 1)
     !ne = indexer (i + 1, j - 1)
