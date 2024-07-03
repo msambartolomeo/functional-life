@@ -3,6 +3,7 @@ module Main where
 -- import Debug.Trace qualified as Debug
 import Data.Array.Repa (Array, D, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
+import Data.Array.Repa.Unsafe qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
 import Foreign.C (CInt)
 import SDL qualified
@@ -81,7 +82,7 @@ rectangle !ps (!x, !y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (y * ps)
 
 {-# INLINE processLives #-}
 processLives :: (Source r Life) => Array r DIM2 Life -> Array D DIM2 Life
-processLives !xs = Repa.traverse xs id processLife
+processLives !xs = Repa.unsafeTraverse xs id processLife
 
 {-# INLINE processLife #-}
 processLife :: (DIM2 -> Life) -> DIM2 -> Life
