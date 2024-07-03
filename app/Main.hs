@@ -71,37 +71,38 @@ runLife g b = do
 
 {-# INLINE coordinatesOfLinearIndex #-}
 coordinatesOfLinearIndex :: (Source r e) => Array r DIM2 e -> Int -> (Int, Int)
-coordinatesOfLinearIndex b index = (i, j)
-  where (Z:. j :. i) = Repa.fromIndex (Repa.extent b) index
+coordinatesOfLinearIndex !b !index = (i, j)
+  where
+    (Z :. !j :. !i) = Repa.fromIndex (Repa.extent b) index
 
 {-# INLINE rectangle #-}
 rectangle :: Int -> (Int, Int) -> SDL.Rectangle CInt
-rectangle ps (x, y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (y * ps) (x * ps)) (fromIntegral <$> SDL.V2 ps ps)
+rectangle !ps (!x, !y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (y * ps) (x * ps)) (fromIntegral <$> SDL.V2 ps ps)
 
 {-# INLINE processLives #-}
 processLives :: (Source r Life) => Array r DIM2 Life -> Array D DIM2 Life
-processLives xs = Repa.traverse xs id processLife
+processLives !xs = Repa.traverse xs id processLife
 
 {-# INLINE processLife #-}
 processLife :: (DIM2 -> Life) -> DIM2 -> Life
 -- processLife f (Z :. j :. i) | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ") :: " ++ show (f (Z :. j :. i))) False  = undefined
-processLife f (Z :. j :. i) = liveOrDie c $ (length . filter id) [n, ne, e, se, s, sw, w, nw]
+processLife !f (Z :. !j :. !i) = liveOrDie c $ (length . filter id) [n, ne, e, se, s, sw, w, nw]
   where
-    indexer = safeIndex (width, height) f
-    c = f (Z :. j :. i)
-    n = indexer i (j - 1)
-    ne = indexer (i + 1) (j - 1)
-    e = indexer (i + 1) j
-    se = indexer (i + 1) (j + 1)
-    s = indexer i (j + 1)
-    sw = indexer (i - 1) (j + 1)
-    w = indexer (i - 1) j
-    nw = indexer (i - 1) (j - 1)
+    !indexer = safeIndex (width, height) f
+    !c = f (Z :. j :. i)
+    !n = indexer i (j - 1)
+    !ne = indexer (i + 1) (j - 1)
+    !e = indexer (i + 1) j
+    !se = indexer (i + 1) (j + 1)
+    !s = indexer i (j + 1)
+    !sw = indexer (i - 1) (j + 1)
+    !w = indexer (i - 1) j
+    !nw = indexer (i - 1) (j - 1)
 
 {-# INLINE safeIndex #-}
 safeIndex :: (Int, Int) -> (DIM2 -> Life) -> Int -> Int -> Life
--- safeIndex _ _ i j      | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ")") False  = undefined
-safeIndex (w, h) m i j = not (i < 0 || j < 0 || i >= w || j >= h) && m (Z :. j :. i)
+-- safeIndex _ _ i j        | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ")") False  = undefined
+safeIndex (!w, !h) !m !i !j = not (i < 0 || j < 0 || i >= w || j >= h) && m (Z :. j :. i)
 
 {-# INLINE liveOrDie #-}
 liveOrDie :: Life -> Int -> Life
