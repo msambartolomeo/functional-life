@@ -1,10 +1,11 @@
 module Main where
 
--- import Debug.Trace qualified as Debug
 import Data.Array.Repa (Array, D, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
-import Data.Array.Repa.Unsafe qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
+import Data.Array.Repa.Unsafe qualified as Repa
+import Data.Vector.Unboxed (Vector)
+import Data.Vector.Unboxed qualified as Vector
 import Foreign.C (CInt)
 import SDL qualified
 import Sdl qualified
@@ -12,10 +13,15 @@ import Types (Life)
 
 raw :: [Life]
 raw =
-  [
-    False, False, True,
-    True,  False, True,
-    False, True,  True
+  [ False,
+    False,
+    True,
+    True,
+    False,
+    True,
+    False,
+    True,
+    True
   ]
 
 size :: Int
@@ -46,7 +52,7 @@ addLives :: Array U DIM2 Life -> Array U DIM2 Life -> Array D DIM2 Life
 addLives xs ys = Repa.traverse2 xs ys const (\f g i -> safe g i || f i)
   where
     (Z :. h :. w) = Repa.extent ys
-    safe g (Z :. j :. i) = safeIndex (w, h) g i j
+    safe g (Z :. j :. i) = safeIndex (w, h) g (i, j)
 
 board :: Array U DIM2 Life
 board = Repa.computeS $ addLives emptyMatrix matrix
@@ -60,7 +66,7 @@ runLife g b = do
 
   alive <- Repa.selectP (Repa.linearIndex b) (coordinatesOfLinearIndex b) (Repa.size (Repa.extent b))
 
-  rectangles <- Repa.computeVectorP $ Repa.map (rectangle pixelSize) alive
+  rectangles <- Repa.computeP $ Repa.map (rectangle pixelSize) alive
 
   Sdl.fillRectangles g $ Repa.toVector rectangles
 
@@ -87,23 +93,23 @@ processLives !xs = Repa.unsafeTraverse xs id processLife
 {-# INLINE processLife #-}
 processLife :: (DIM2 -> Life) -> DIM2 -> Life
 -- processLife f (Z :. j :. i) | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ") :: " ++ show (f (Z :. j :. i))) False  = undefined
-processLife !f (Z :. !j :. !i) = liveOrDie c $ (length . filter id) [n, ne, e, se, s, sw, w, nw]
+processLife !f (Z :. !j :. !i) = liveOrDie c $ length $ filter id [n, ne, e, se, s, sw, w, nw]
   where
     !indexer = safeIndex (width, height) f
     !c = f (Z :. j :. i)
-    !n = indexer i (j - 1)
-    !ne = indexer (i + 1) (j - 1)
-    !e = indexer (i + 1) j
-    !se = indexer (i + 1) (j + 1)
-    !s = indexer i (j + 1)
-    !sw = indexer (i - 1) (j + 1)
-    !w = indexer (i - 1) j
-    !nw = indexer (i - 1) (j - 1)
+    !n = indexer (i, j - 1)
+    !ne = indexer (i + 1, j - 1)
+    !e = indexer (i + 1, j)
+    !se = indexer (i + 1, j + 1)
+    !s = indexer (i, j + 1)
+    !sw = indexer (i - 1, j + 1)
+    !w = indexer (i - 1, j)
+    !nw = indexer (i - 1, j - 1)
 
 {-# INLINE safeIndex #-}
-safeIndex :: (Int, Int) -> (DIM2 -> Life) -> Int -> Int -> Life
--- safeIndex _ _ i j        | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ")") False  = undefined
-safeIndex (!w, !h) !m !i !j = not (i < 0 || j < 0 || i >= w || j >= h) && m (Z :. j :. i)
+safeIndex :: (Int, Int) -> (DIM2 -> Life) -> (Int, Int) -> Life
+-- safeIndex _ _  (i, j)        | Debug.trace ("(" ++ show i ++ ", " ++ show j ++ ")") False  = undefined
+safeIndex (!w, !h) !m (!i, !j) = not (i < 0 || j < 0 || i >= w || j >= h) && m (Z :. j :. i)
 
 {-# INLINE liveOrDie #-}
 liveOrDie :: Life -> Int -> Life
