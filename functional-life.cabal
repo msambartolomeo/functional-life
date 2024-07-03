@@ -86,9 +86,9 @@ executable functional-life
         -threaded
         -fno-liberate-case
         -funfolding-use-threshold1000
+        -fllvm
         -optlo-O3
-        +RTS
-        -N16
+        +RTS -N
 
     -- Base language which the package is written in.
     default-language: GHC2021
