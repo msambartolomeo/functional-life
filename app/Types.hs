@@ -16,11 +16,11 @@ instance From Color (SDL.V4 Word8) where
   from White = SDL.V4 255 255 255 255
   from Black = SDL.V4 0 0 0 255
 
-data Life = O | X
+data Life = O | X deriving (Eq, Show)
 
-join :: Life -> Life -> Life
-join O _ = O
-join X l = l
+joinLife :: Life -> Life -> Life
+joinLife O _ = O
+joinLife X l = l
 
 instance From Life Int where
   {-# INLINE from #-}

@@ -64,6 +64,8 @@ executable functional-life
     other-modules:
         Sdl,
         Types,
+        Patterns,
+        GameOfLife,
 
     -- LANGUAGE extensions used by modules in this package.
     default-extensions:

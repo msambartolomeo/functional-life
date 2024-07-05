@@ -5,30 +5,20 @@ import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
 import Data.Array.Repa.Unsafe qualified as Repa
 import Foreign.C (CInt)
+import Patterns qualified as P
 import SDL qualified
 import Sdl qualified
-import Types (Life (..), join)
+import Types (Life (..), joinLife)
 import Types qualified
 
-raw :: [Life]
-raw =
-  [ 
-    X, X, O,
-    O, X, O,
-    X, O, O
-  ]
-
-size :: Int
-size = 3
-
 matrix :: Array U DIM2 Life
-matrix = Repa.fromListUnboxed (Z :. size :. size) raw
+matrix = Types.from P.reflector
 
 resolution :: (Int, Int)
 resolution = (1920, 1080)
 
 pixelSize :: Int
-pixelSize = 2
+pixelSize = 1
 
 width :: Int
 width = fst resolution `div` pixelSize
@@ -42,19 +32,23 @@ cellCount = height * width
 emptyMatrix :: Array U DIM2 Life
 emptyMatrix = Repa.fromListUnboxed (Z :. height :. width) $ take cellCount $ X <$ [0 :: Int ..]
 
-addLives :: Array U DIM2 Life -> Array U DIM2 Life -> Array D DIM2 Life
-addLives xs ys = Repa.traverse2 xs ys const (\f g i -> safe g i `join` f i)
+addLives ::
+  Array U DIM2 Life -> -- Array containing existing life, to insert to
+  Array U DIM2 Life -> -- Array containing new life
+  (Int, Int) -> -- Offset to insert new life
+  Array D DIM2 Life
+addLives xs ys (wo, ho) = Repa.traverse2 xs ys const (\f g i -> safe g i `joinLife` f i)
   where
     (Z :. h :. w) = Repa.extent ys
-    safe g (Z :. j :. i) = safeIndex (w, h) g (i, j)
+    safe g (Z :. j :. i) = safeIndex (w, h) g (i - wo, j - ho)
 
 board :: Array U DIM2 Life
-board = Repa.computeS $ addLives emptyMatrix matrix
+board = Repa.computeS $ addLives emptyMatrix matrix (20, 20)
 
 main :: IO ()
 main = Sdl.withSdl "Functional Life" resolution $ flip runLife board
 
-runLife :: (Source r Life) => Sdl.Sdl -> Array r DIM2 Life -> IO ()
+runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
   Sdl.clearScreen g
 
@@ -78,7 +72,7 @@ coordinatesOfLinearIndex !b !index = (i, j)
 
 {-# INLINE rectangle #-}
 rectangle :: Int -> (Int, Int) -> SDL.Rectangle CInt
-rectangle !ps (!x, !y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (y * ps) (x * ps)) (fromIntegral <$> SDL.V2 ps ps)
+rectangle !ps (!x, !y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (x * ps) (y * ps)) (fromIntegral <$> SDL.V2 ps ps)
 
 {-# INLINE processLives #-}
 processLives :: (Source r Life) => Array r DIM2 Life -> Array D DIM2 Life
