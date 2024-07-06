@@ -22,22 +22,22 @@ stopperOsci :: Board
 stopperOsci = GoL.fromPattern P.reflector <.> GoL.move (9, 27) (GoL.fromPattern P.box)
 
 reflectorNW :: Board
-reflectorNW = GoL.flipY stopperOsci
+reflectorNW = (GoL.forward 19 . GoL.flipY) stopperOsci
 
 reflectorSW :: Board
-reflectorSW = (GoL.transpose . GoL.flipY) stopperOsci
+reflectorSW = (GoL.forward 4 . GoL.transpose . GoL.flipY . GoL.flipX) stopperOsci
 
 reflectorSE :: Board
-reflectorSE = doubleOsci
+reflectorSE = GoL.forward 3 doubleOsci
 
 reflectorNE :: Board
-reflectorNE = GoL.flipY stopperOsci
+reflectorNE = (GoL.forward 16 . GoL.flipX . GoL.flipY) stopperOsci
 
 reflectorPrinter :: Board
-reflectorPrinter = stopperOsci
+reflectorPrinter = GoL.flipX stopperOsci
 
 allRef :: Board
-allRef = createBoard reflectorSE <.> GoL.move (25, 0) reflectorNE <.> GoL.move (50, 0) reflectorNW <.> GoL.move (75, 0) reflectorPrinter <.> GoL.move (50, 50) reflectorSW
+allRef = GoL.empty resolution <.> GoL.move (2, 2) reflectorSE <.> GoL.move (25, 2) reflectorNE <.> GoL.move (50, 2) reflectorNW <.> GoL.move (75, 2) reflectorPrinter <.> GoL.move (50, 50) reflectorSW
 
 createBoard :: Board -> Board
 createBoard = GoL.join (GoL.empty resolution) . GoL.move (2, 2)
@@ -75,7 +75,7 @@ runLife g b = do
 
   Sdl.present g
 
-  SDL.delay 50
+  SDL.delay 1000000
 
   runLife g b'
 
