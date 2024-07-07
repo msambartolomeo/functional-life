@@ -36,8 +36,20 @@ reflectorNE = (GoL.forward 16 . GoL.flipX . GoL.flipY) stopperOsci
 reflectorPrinter :: Board
 reflectorPrinter = GoL.flipX stopperOsci
 
-allRef :: Board
-allRef = GoL.empty resolution <.> GoL.move (2, 2) reflectorSE <.> GoL.move (25, 2) reflectorNE <.> GoL.move (50, 2) reflectorNW <.> GoL.move (75, 2) reflectorPrinter <.> GoL.move (50, 50) reflectorSW
+-- allRef :: Board
+-- allRef = GoL.empty resolution <.> GoL.move (2, 2) reflectorSE <.> GoL.move (25, 2) reflectorNE <.> GoL.move (50, 2) reflectorNW <.> GoL.move (75, 2) reflectorPrinter <.> GoL.move (50, 50) reflectorSW
+
+testGliderBot :: Board
+testGliderBot = (GoL.move (26, 15) . GoL.flipX . GoL.flipY) $ GoL.fromPattern P.g1
+
+testGliderTop :: Board
+testGliderTop = GoL.move (22, 35) $ GoL.fromPattern P.g3
+
+bottomMachine :: Board
+bottomMachine = testGliderBot <.> (reflectorSE <.> GoL.move (27, 45) reflectorNE <.> GoL.move (79, 57) reflectorPrinter)
+
+topMachine :: Board
+topMachine = testGliderTop <.> (reflectorSW <.> GoL.move (28, 14) reflectorNW)
 
 createBoard :: Board -> Board
 createBoard = GoL.join (GoL.empty resolution) . GoL.move (2, 2)
@@ -59,7 +71,7 @@ cellCount = height * width
 
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution $ flip runLife allRef
+  Sdl.withSdl "Functional Life" resolution $ flip runLife $ createBoard topMachine
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
@@ -75,7 +87,7 @@ runLife g b = do
 
   Sdl.present g
 
-  SDL.delay 1000000
+  -- SDL.delay 5000
 
   runLife g b'
 

@@ -18,6 +18,20 @@ g2 =
     [O, X, O]
   ]
 
+g3 :: Pattern
+g3 =
+  [ [X, O, O],
+    [O, X, O],
+    [X, X, O]
+  ]
+
+g4 :: Pattern
+g4 =
+  [ [O, O, X],
+    [X, O, O],
+    [O, X, X]
+  ]
+
 reflector :: Pattern
 reflector =
   [ [X, X, X, X, X, X, X, X, X, O, O, X, X],
