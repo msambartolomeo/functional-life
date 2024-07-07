@@ -9,6 +9,7 @@ import GameOfLife qualified as GoL
 import Patterns qualified as P
 import SDL qualified
 import Sdl qualified
+import System.Exit (exitSuccess)
 import Types (Life (..))
 import Types qualified
 
@@ -98,6 +99,20 @@ addSecondGlider = GoL.join ((GoL.move (20, 29) . GoL.flipX) $ GoL.fromPattern P.
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
+  events <- SDL.pollEvents
+
+  foldr
+    ( \e m ->
+        m
+          >>= return
+            ( case SDL.eventPayload e of
+                SDL.QuitEvent -> exitSuccess
+                _ -> return ()
+            )
+    )
+    (return ())
+    events
+
   Sdl.clearScreen g
 
   alive <- Repa.selectP (Types.from . Repa.linearIndex b) (coordinatesOfLinearIndex b) (Repa.size (Repa.extent b))
