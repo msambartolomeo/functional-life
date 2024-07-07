@@ -40,7 +40,7 @@ reflectorPrinter = GoL.flipX stopperOsci
 -- allRef = GoL.empty resolution <.> GoL.move (2, 2) reflectorSE <.> GoL.move (25, 2) reflectorNE <.> GoL.move (50, 2) reflectorNW <.> GoL.move (75, 2) reflectorPrinter <.> GoL.move (50, 50) reflectorSW
 
 testGliderBot :: Board
-testGliderBot = (GoL.move (26, 15) . GoL.flipX . GoL.flipY) $ GoL.fromPattern P.g1
+testGliderBot = (GoL.move (26, 15) . GoL.flipX . GoL.flipY) $ GoL.fromPattern P.g2
 
 testGliderTop :: Board
 testGliderTop = GoL.move (22, 35) $ GoL.fromPattern P.g3
@@ -71,7 +71,7 @@ cellCount = height * width
 
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution $ flip runLife $ createBoard topMachine
+  Sdl.withSdl "Functional Life" resolution $ flip runLife $ createBoard bottomMachine
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
@@ -86,8 +86,6 @@ runLife g b = do
   b' <- Repa.computeUnboxedP $ GoL.processLives b
 
   Sdl.present g
-
-  -- SDL.delay 5000
 
   runLife g b'
 
