@@ -99,19 +99,17 @@ addSecondGlider = GoL.join ((GoL.move (20, 29) . GoL.flipX) $ GoL.fromPattern P.
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
-  events <- SDL.pollEvents
-
-  foldr
-    ( \e m ->
-        m
-          >>= return
-            ( case SDL.eventPayload e of
-                SDL.QuitEvent -> exitSuccess
-                _ -> return ()
-            )
-    )
-    (return ())
-    events
+  SDL.pollEvents
+    >>= foldr
+      ( \e m ->
+          m
+            >>= return
+              ( case SDL.eventPayload e of
+                  SDL.QuitEvent -> exitSuccess
+                  _ -> return ()
+              )
+      )
+      (return ())
 
   Sdl.clearScreen g
 
