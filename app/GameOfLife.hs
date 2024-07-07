@@ -14,11 +14,11 @@ class GameOfLife g where
 
   size :: g -> (Int, Int)
 
-  move :: (Int, Int) -> g -> g
+  flipX :: g -> g
 
-  expand :: (Int, Int) -> g -> g
+  flipY :: g -> g
 
-  fits :: g -> g -> Bool
+  transpose :: g -> g
 
   joinO ::
     (Int, Int) -> -- Offset to insert new life
@@ -26,20 +26,37 @@ class GameOfLife g where
     g -> -- Game containing new life
     g
 
-  join :: g -> g -> g
-
-  -- alias for join
-  (<.>) :: g -> g -> g
-  (<.>) = join
-
-  flipX :: g -> g
-
-  flipY :: g -> g
-
-  transpose :: g -> g
-
   -- Goes forward n iterations in game of life
   forward :: Int -> g -> g
+
+  {-# INLINE move #-}
+  move :: (Int, Int) -> g -> g
+  move (x, y) b = joinO (x, y) (empty (x + w, y + h)) b
+    where
+      (w, h) = size b
+
+  {-# INLINE expand #-}
+  expand :: (Int, Int) -> g -> g
+  expand = join . empty
+
+  {-# INLINE fits #-}
+  fits :: g -> g -> Bool
+  fits xs ys = w <= w' && h <= h'
+    where
+      (w, h) = size xs
+      (w', h') = size ys
+
+  {-# INLINE join #-}
+  join :: g -> g -> g
+  join xs ys
+    | fits xs ys = joinO (0, 0) ys xs
+    | fits ys xs = joinO (0, 0) xs ys
+    | otherwise = error $ "Invalid Join, array sizes are " ++ show (size xs) ++ " and " ++ show (size ys)
+
+  -- alias for join
+  {-# INLINE (<.>) #-}
+  (<.>) :: g -> g -> g
+  (<.>) = join
 
 type Board = Array U DIM2 Life
 
@@ -58,37 +75,12 @@ instance GameOfLife Board where
     where
       (Z :. h :. w) = Repa.extent xs
 
-  {-# INLINE move #-}
-  move :: (Int, Int) -> Board -> Board
-  move (x, y) b = joinO (x, y) (empty (x + w, y + h)) b
-    where
-      (w, h) = size b
-
-  -- Expects current board to be smaller than the requested size
-  {-# INLINE expand #-}
-  expand :: (Int, Int) -> Board -> Board
-  expand = join . empty
-
-  {-# INLINE fits #-}
-  fits :: Board -> Board -> Bool
-  fits xs ys = w <= w' && h <= h'
-    where
-      (w, h) = size xs
-      (w', h') = size ys
-
   {-# INLINE joinO #-}
   joinO :: (Int, Int) -> Board -> Board -> Board
   joinO (wo, ho) xs ys = Repa.computeS $ Repa.traverse2 xs ys const (\f g i -> safe g i `T.joinLife` f i)
     where
       (Z :. h :. w) = Repa.extent ys
       safe g (Z :. j :. i) = safeIndex (w, h) g (i - wo, j - ho)
-
-  {-# INLINE join #-}
-  join :: Board -> Board -> Board
-  join xs ys
-    | fits xs ys = joinO (0, 0) ys xs
-    | fits ys xs = joinO (0, 0) xs ys
-    | otherwise = error $ "Invalid Join, array sizes are " ++ show (size xs) ++ " and " ++ show (size ys)
 
   {-# INLINE flipX #-}
   flipX :: Board -> Board
