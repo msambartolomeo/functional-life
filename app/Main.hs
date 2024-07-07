@@ -36,29 +36,26 @@ reflectorNE = (GoL.forward 16 . GoL.flipX . GoL.flipY) stopperOsci
 reflectorPrinter :: Board
 reflectorPrinter = GoL.flipX stopperOsci
 
--- allRef :: Board
--- allRef = GoL.empty resolution <.> GoL.move (2, 2) reflectorSE <.> GoL.move (25, 2) reflectorNE <.> GoL.move (50, 2) reflectorNW <.> GoL.move (75, 2) reflectorPrinter <.> GoL.move (50, 50) reflectorSW
+-- testGliderBot :: Board
+-- testGliderBot = (GoL.move (26, 15) . GoL.flipX . GoL.flipY) $ GoL.fromPattern P.g2
 
-testGliderBot :: Board
-testGliderBot = (GoL.move (26, 15) . GoL.flipX . GoL.flipY) $ GoL.fromPattern P.g2
-
-testGliderTop :: Board
-testGliderTop = GoL.move (22, 35) $ GoL.fromPattern P.g3
+-- testGliderTop :: Board
+-- testGliderTop = GoL.move (22, 35) $ GoL.fromPattern P.g3
 
 bottomMachine :: Board
-bottomMachine = testGliderBot <.> (reflectorSE <.> GoL.move (27, 45) reflectorNE <.> GoL.move (79, 57) reflectorPrinter)
+bottomMachine = reflectorSE <.> GoL.move (27, 45) reflectorNE <.> GoL.move (79, 57) reflectorPrinter
 
 topMachine :: Board
-topMachine = testGliderTop <.> (reflectorSW <.> GoL.move (28, 14) reflectorNW)
+topMachine = reflectorSW <.> GoL.move (28, 14) reflectorNW
 
 createBoard :: Board -> Board
-createBoard = GoL.join (GoL.empty resolution) . GoL.move (2, 2)
+createBoard = GoL.join (GoL.empty resolution)
 
 resolution :: (Int, Int)
 resolution = (1920, 1080)
 
 pixelSize :: Int
-pixelSize = 10
+pixelSize = 4
 
 width :: Int
 width = fst resolution `div` pixelSize
@@ -69,9 +66,35 @@ height = snd resolution `div` pixelSize
 cellCount :: Int
 cellCount = height * width
 
+dots :: [Bool]
+dots = take 9 $ True <$ [0 :: Int ..]
+
+-- addGliders :: Board -> Board -> [Bool] -> Board
+-- addGliders bot top bs = addGlidersRec bot top bs (length bs) 0
+
+-- addGlidersRec :: Board -> Board -> [Bool] -> Int -> Int -> Board
+-- addGlidersRec bot top l bs i = undefined
+
+size :: Int -> (Int, Int)
+size l = (41 + (11 + 12) * (((l - 3) `div` 4) - 1) + 1, 13 + ((11 + 12) * ((l - 3) `div` 4)) - 15)
+
+allRef :: Board
+allRef = GoL.move (50, 50) $ createBoard (GoL.move (w, 0) (addMiddleGlider topMachine)) <.> GoL.move (0, h) ((addFirstGlider . addSecondGlider) bottomMachine)
+  where
+    (w, h) = size $ length dots
+
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution $ flip runLife $ createBoard bottomMachine
+  Sdl.withSdl "Functional Life" resolution $ flip runLife allRef
+
+addMiddleGlider :: Board -> Board
+addMiddleGlider = GoL.join ((GoL.move (20, 23) . GoL.flipY) $ GoL.fromPattern P.g3)
+
+addFirstGlider :: Board -> Board
+addFirstGlider = GoL.join ((GoL.move (31, 41) . GoL.flipX) $ GoL.fromPattern P.g2)
+
+addSecondGlider :: Board -> Board
+addSecondGlider = GoL.join ((GoL.move (20, 29) . GoL.flipX) $ GoL.fromPattern P.g4)
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
@@ -86,6 +109,8 @@ runLife g b = do
   b' <- Repa.computeUnboxedP $ GoL.processLives b
 
   Sdl.present g
+
+  -- SDL.delay 5000
 
   runLife g b'
 
