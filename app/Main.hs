@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Use list literal pattern" #-}
 module Main where
 
 import Data.Array.Repa (Array, DIM2, Source, U, Z (..), (:.) (..))
@@ -56,7 +59,7 @@ resolution :: (Int, Int)
 resolution = (1920, 1080)
 
 pixelSize :: Int
-pixelSize = 4
+pixelSize = 2
 
 width :: Int
 width = fst resolution `div` pixelSize
@@ -68,48 +71,84 @@ cellCount :: Int
 cellCount = height * width
 
 dots :: [Bool]
-dots = take 9 $ True <$ [0 :: Int ..]
-
--- addGliders :: Board -> Board -> [Bool] -> Board
--- addGliders bot top bs = addGlidersRec bot top bs (length bs) 0
-
--- addGlidersRec :: Board -> Board -> [Bool] -> Int -> Int -> Board
--- addGlidersRec bot top l bs i = undefined
-
-size :: Int -> (Int, Int)
-size l = (41 + (11 + 12) * (((l - 3) `div` 4) - 1) + 1, 13 + ((11 + 12) * ((l - 3) `div` 4)) - 15)
-
-allRef :: Board
-allRef = GoL.move (50, 50) $ createBoard (GoL.move (w, 0) (addMiddleGlider topMachine)) <.> GoL.move (0, h) ((addFirstGlider . addSecondGlider) bottomMachine)
-  where
-    (w, h) = size $ length dots
+dots = take 41 $ True <$ [0 :: Int ..]
 
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution $ flip runLife allRef
+  Sdl.withSdl "Functional Life" resolution $ flip runLife $ createPrinter dots
 
 addMiddleGlider :: Board -> Board
 addMiddleGlider = GoL.join ((GoL.move (20, 23) . GoL.flipY) $ GoL.fromPattern P.g3)
 
-addFirstGlider :: Board -> Board
-addFirstGlider = GoL.join ((GoL.move (31, 41) . GoL.flipX) $ GoL.fromPattern P.g2)
+addSecondLastGlider :: Board -> Board
+addSecondLastGlider = GoL.join ((GoL.move (31, 41) . GoL.flipX) $ GoL.fromPattern P.g2)
 
-addSecondGlider :: Board -> Board
-addSecondGlider = GoL.join ((GoL.move (20, 29) . GoL.flipX) $ GoL.fromPattern P.g4)
+addLastGlider :: Board -> Board
+addLastGlider = GoL.join ((GoL.move (20, 29) . GoL.flipX) $ GoL.fromPattern P.g4)
+
+handleEvent :: SDL.EventPayload -> IO ()
+handleEvent SDL.QuitEvent = exitSuccess
+handleEvent _ = return ()
+
+createPrinter :: [Bool] -> Board
+createPrinter gs = buildTopMachine l (zip [0 ..] first) <.> buildBottomMachine l (zip [0 ..] second)
+  where
+    l = length gs
+    (first, second) = splitAt (l `div` 2) gs
+
+size :: Int -> (Int, Int)
+size l = (41 + (11 + 12) * (((l - 3) `div` 4) - 1) + 1, 13 + ((11 + 12) * ((l - 3) `div` 4)) - 15)
+
+buildTopMachine :: Int -> [(Int, Bool)] -> Board
+buildTopMachine _ [] = error "Invalid glider list"
+buildTopMachine l ((_, b) : []) = GoL.expand (1000, 1000) $ GoL.move (19 + 23 * ((l - 3) `div` 4), 0) $ applyIf b addMiddleGlider topMachine
+buildTopMachine l ((i, b) : bs) = applyIf b (GoL.join (GoL.move (x, y) $ glider Top i)) (buildTopMachine l bs)
+  where
+    startX = 26
+    startY = 13
+    -- (x, y) = (startX + 12 * (i `div` 2) + 11 * ((i + 1) `div` 2), startY + 12 * ((((l - 3) `div` 2) - (i + 1)) `div` 2) + 11 * ((((l - 3) `div` 2) - i) `div` 2))
+    (x, y) = g startX startY l i
+
+buildBottomMachine :: Int -> [(Int, Bool)] -> Board
+buildBottomMachine _ [] = error "Invalid glider list"
+buildBottomMachine l ((_, b2) : ((_, b1) : [])) = GoL.expand (1000, 1000) $ GoL.move (0, 23 * ((l - 3) `div` 4) - 2) $ applyIf b2 addSecondLastGlider $ applyIf b1 addLastGlider bottomMachine
+buildBottomMachine l ((i, b) : bs) = applyIf b (GoL.join (GoL.move (x, y) $ glider Bottom i)) (buildBottomMachine l bs)
+  where
+    startX = 41
+    startY = 35
+    -- (x, y) = (startX + 12 * (i `div` 2) + 11 * ((i + 1) `div` 2), startY + 12 * ((((l - 3) `div` 2) - (i + 1)) `div` 2) + 11 * ((((l - 3) `div` 2) - i) `div` 2))
+    (x, y) = f startX startY l (((l - 3) `div` 2) - 1 - i)
+
+g :: Int -> Int -> Int -> Int -> (Int, Int)
+g sx sy l i = (sx + 12 * (i `div` 2) + 11 * ((i + 1) `div` 2), sy + 12 * ((((l - 3) `div` 2) - (i + 1)) `div` 2) + 11 * ((((l - 3) `div` 2) - i) `div` 2))
+
+f :: (Integral b) => b -> b -> b -> b -> (b, b)
+f sx sy l i = (sx + 12 * ((i + 1) `div` 2) + 11 * (i `div` 2), sy + 12 * ((((l - 3) `div` 2) - i) `div` 2) + 11 * ((((l - 3) `div` 2) - (i + 1)) `div` 2))
+
+data Side = Top | Bottom
+
+glider :: (GameOfLife g) => Side -> Int -> g
+glider Top i = case i `mod` 2 of
+  0 -> GoL.rotate $ GoL.fromPattern P.g2
+  1 -> GoL.rotate $ GoL.fromPattern P.g4
+  _ -> error "Unreachable"
+glider Bottom i = case i `mod` 2 of
+  0 -> GoL.fromPattern P.g3
+  1 -> GoL.fromPattern P.g1
+  _ -> error "Unreachable"
+
+applyIf :: Bool -> (a -> a) -> a -> a
+applyIf False = const id
+applyIf True = id
+
+allRef :: Board
+allRef = GoL.move (50, 50) $ createBoard (GoL.move (w, 0) (addMiddleGlider topMachine)) <.> GoL.move (0, h) ((addLastGlider . addSecondLastGlider) bottomMachine)
+  where
+    (w, h) = size $ length dots
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
 runLife g b = do
-  SDL.pollEvents
-    >>= foldr
-      ( \e m ->
-          m
-            >>= return
-              ( case SDL.eventPayload e of
-                  SDL.QuitEvent -> exitSuccess
-                  _ -> return ()
-              )
-      )
-      (return ())
+  SDL.pollEvents >>= foldr ((=<<) . return . handleEvent . SDL.eventPayload) (return ())
 
   Sdl.clearScreen g
 
@@ -123,7 +162,7 @@ runLife g b = do
 
   Sdl.present g
 
-  -- SDL.delay 5000
+  -- SDL.delay 100
 
   runLife g b'
 

@@ -39,6 +39,10 @@ class GameOfLife g where
   expand :: (Int, Int) -> g -> g
   expand = join . empty
 
+  {-# INLINE rotate #-}
+  rotate :: g -> g
+  rotate = flipX . flipY
+
   {-# INLINE fits #-}
   fits :: g -> g -> Bool
   fits xs ys = w <= w' && h <= h'
