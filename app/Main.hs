@@ -4,7 +4,7 @@ import Data.Array.Repa (Array, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
 import Fonts (Font (A, H, L, O), fontLines)
-import GameOfLife (processLives)
+import GameOfLife (GameOfLife ((<.>)), processLives)
 import GameOfLife qualified as GoL
 import Printer qualified
 import Sdl qualified
@@ -21,7 +21,10 @@ word = [H, O, L, A]
 
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution (\sdl -> Sdl.mainLoop sdl runLife $ GoL.move (300, 150) $ Printer.createPrinter $ head $ fontLines word)
+  Sdl.withSdl "Functional Life" resolution (\sdl -> Sdl.mainLoop sdl runLife $ GoL.move (1000, 0) $ buildLife word)
+
+buildLife :: (GameOfLife g) => [Font] -> g
+buildLife = foldr (\(i, bs) gol -> GoL.move (i * 92, i * 21) (Printer.createPrinter i bs) <.> gol) (GoL.empty (0, 0)) . zip [0 :: Int ..] . fontLines
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO (Array U DIM2 Life)
 runLife g b = do
@@ -33,7 +36,7 @@ runLife g b = do
 
   Repa.computeP $ processLives b
   where
-    pixelSize = 2
+    pixelSize = 1
 
 {-# INLINE coordinatesOfLinearIndex #-}
 coordinatesOfLinearIndex :: (Source r e) => Array r DIM2 e -> Int -> (Int, Int)

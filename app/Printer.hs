@@ -1,17 +1,21 @@
 module Printer where
 
+import Data.Tuple qualified as Tuple
 import GameOfLife (GameOfLife ((<.>)))
 import GameOfLife qualified as GoL
 import Patterns qualified as P
 
-createPrinter :: (GameOfLife g) => [Bool] -> g
-createPrinter gs = buildGliders (topGliderPlacer l) printerTop (enumerate top) <.> buildGliders (bottomGliderPlacer l) printerBot (enumerate bot)
+createPrinter :: (GameOfLife g) => Int -> [Bool] -> g
+createPrinter o gs = buildGliders (topGliderPlacer l) printerTop (enumerate top) <.> buildGliders (bottomGliderPlacer l) printerBot (enumerate bot)
   where
     enumerate = zip [0 ..]
     (l, gs') = forceGliderCount gs 0
-    (top, bot) = splitAt (l `div` 2) gs'
+    (top, bot) = splitAt (l `div` 2) $ lastNToHead (8 + 4 * o) gs'
     printerTop = GoL.move (19 + 23 * ((l - 3) `div` 4), 0) topMachine
     printerBot = GoL.move (0, 23 * ((l - 3) `div` 4) - 2) bottomMachine
+
+lastNToHead :: Int -> [a] -> [a]
+lastNToHead n = uncurry (++) . Tuple.swap . splitAt n
 
 -- Glider count must satisfy the condition (l `mod` 4) + 4 = 5 for the machine to work
 -- If there are not enough gliders, Falses are added at the end

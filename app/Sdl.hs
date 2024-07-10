@@ -54,7 +54,7 @@ mainLoop s f x = do
 
   Sdl.present s
 
-  -- SDL.delay 5000
+  -- SDL.delay 50
 
   mainLoop s f x'
 
