@@ -3,7 +3,7 @@ module Main where
 import Data.Array.Repa (Array, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
-import Fonts (Font (A, H, L, O), fontLines)
+import Fonts (Font, fontLines, fromString)
 import GameOfLife (GameOfLife ((<.>)), processLives)
 import GameOfLife qualified as GoL
 import Printer qualified
@@ -15,7 +15,7 @@ resolution :: (Int, Int)
 resolution = (1920, 1080)
 
 word :: [Font]
-word = [H, O, L, A]
+word = fromString "GROBA"
 
 -- dots = take 41 $ True <$ [0 :: Int ..]
 

@@ -9,21 +9,22 @@ createPrinter :: (GameOfLife g) => Int -> [Bool] -> g
 createPrinter o gs = buildGliders (topGliderPlacer l) printerTop (enumerate top) <.> buildGliders (bottomGliderPlacer l) printerBot (enumerate bot)
   where
     enumerate = zip [0 ..]
-    (l, gs') = forceGliderCount gs 0
-    (top, bot) = splitAt (l `div` 2) $ lastNToHead (8 + 4 * o) gs'
+    (l, gs') = forceGliderCount gs (length gs)
+    (top, bot) = splitAt (l `div` 2) $ firstNToBack ((4 * o) + 1) gs'
     printerTop = GoL.move (19 + 23 * ((l - 3) `div` 4), 0) topMachine
     printerBot = GoL.move (0, 23 * ((l - 3) `div` 4) - 2) bottomMachine
 
-lastNToHead :: Int -> [a] -> [a]
-lastNToHead n = uncurry (++) . Tuple.swap . splitAt n
+firstNToBack :: Int -> [a] -> [a]
+firstNToBack n = uncurry (++) . Tuple.swap . splitAt n
 
 -- Glider count must satisfy the condition (l `mod` 4) + 4 = 5 for the machine to work
 -- If there are not enough gliders, Falses are added at the end
 -- At least 6 Falses are added always as separation
 forceGliderCount :: [Bool] -> Int -> (Int, [Bool])
--- forceGliderCount gs 0 = let n = l `mod` 4 + 3 in gs ++ take (12 - n) (False <$ [0 :: Int ..])
-forceGliderCount [] n = (n + 9 - (n `mod` 4), take (9 - (n `mod` 4)) (False <$ [0 :: Int ..]))
-forceGliderCount (x : xs) n = let (l, xs') = forceGliderCount xs (n + 1) in (l, x : xs')
+forceGliderCount gs l = (l + (21 - l `mod` 4), take (21 - l `mod` 4) (False <$ [0 :: Int ..]) ++ gs)
+
+-- forceGliderCount [] n = (n + 13 - (n `mod` 4), take (13 - (n `mod` 4)) (False <$ [0 :: Int ..]))
+-- forceGliderCount (x : xs) n = let (l, xs') = forceGliderCount xs (n + 1) in (l, x : xs')
 
 buildGliders :: (GameOfLife g) => (Int -> g) -> g -> [(Int, Bool)] -> g
 buildGliders f = foldr (\(i, b) bs -> if b then f i <.> bs else bs)
