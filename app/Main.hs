@@ -3,6 +3,7 @@ module Main where
 import Data.Array.Repa (Array, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
+import Fonts (Font (A, H, L, O), fontLines)
 import GameOfLife (processLives)
 import GameOfLife qualified as GoL
 import Printer qualified
@@ -13,14 +14,14 @@ import Types qualified
 resolution :: (Int, Int)
 resolution = (1920, 1080)
 
-dots :: [Bool]
-dots = [True, False, True, False, True, True, False, True, False, True, True, True, True, False, False, False, False, False, False, False, False]
+word :: [Font]
+word = [H, O, L, A]
 
 -- dots = take 41 $ True <$ [0 :: Int ..]
 
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution (\sdl -> Sdl.mainLoop sdl runLife $ GoL.move (150, 150) $ Printer.createPrinter dots)
+  Sdl.withSdl "Functional Life" resolution (\sdl -> Sdl.mainLoop sdl runLife $ GoL.move (300, 150) $ Printer.createPrinter $ head $ fontLines word)
 
 runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO (Array U DIM2 Life)
 runLife g b = do
