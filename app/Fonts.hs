@@ -1,6 +1,6 @@
 module Fonts where
 
-data Font = A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8 | N9 | N0 | Undefined
+data Font = A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8 | N9 | N0 | Space | Colon | Semi | Period | Comma | Rpar | Lpar | Exclamation | Question | Undefined
 
 getRepresentation :: Font -> [[Bool]]
 getRepresentation A = [[True, True, True], [True, False, True], [True, True, True], [True, False, True], [True, False, True]]
@@ -39,6 +39,15 @@ getRepresentation N7 = [[True, True, True], [False, False, True], [False, False,
 getRepresentation N8 = [[True, True, True], [True, False, True], [True, True, True], [True, False, True], [True, True, True]]
 getRepresentation N9 = [[True, True, True], [True, False, True], [True, True, True], [False, False, True], [True, True, True]]
 getRepresentation N0 = [[True, True, True], [True, False, True], [True, False, True], [True, False, True], [True, True, True]]
+getRepresentation Space = [[False, False, False], [False, False, False], [False, False, False], [False, False, False], [False, False, False]]
+getRepresentation Colon = [[False, False, False], [False, True, False], [False, False, False], [False, True, False], [False, False, False]]
+getRepresentation Semi = [[False, False, False], [False, True, False], [False, False, False], [False, True, False], [False, True, False]]
+getRepresentation Period = [[False, False, False], [False, False, False], [False, False, False], [False, True, False], [False, False, False]]
+getRepresentation Comma = [[False, False, False], [False, False, False], [False, False, False], [False, True, False], [False, True, False]]
+getRepresentation Rpar = [[False, True, False], [False, False, True], [False, False, True], [False, False, True], [False, True, False]]
+getRepresentation Lpar = [[False, True, False], [True, False, False], [True, False, False], [True, False, False], [False, True, False]]
+getRepresentation Question = [[True, True, True], [False, False, True], [False, True, True], [False, False, False], [False, True, False]]
+getRepresentation Exclamation = [[False, True, False], [False, True, False], [False, True, False], [False, False, False], [False, True, False]]
 getRepresentation Undefined = [[True, True, True], [True, True, True], [True, True, True], [True, True, True], [True, True, True]]
 
 fromChar :: Char -> Font
@@ -104,6 +113,15 @@ fromChar '7' = N7
 fromChar '8' = N8
 fromChar '9' = N9
 fromChar '0' = N0
+fromChar ' ' = Space 
+fromChar ':' = Colon 
+fromChar ';' = Semi 
+fromChar '.' = Period 
+fromChar ',' = Comma 
+fromChar ')' = Rpar 
+fromChar '(' = Lpar 
+fromChar '?' = Question 
+fromChar '!' = Exclamation 
 fromChar _ = Undefined
 
 fromString :: [Char] -> [Font]
