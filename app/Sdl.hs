@@ -7,6 +7,7 @@ import Data.Vector qualified as Vector
 import Foreign.C (CInt)
 import SDL (($=))
 import SDL qualified
+import System.Exit (exitSuccess)
 import Types (Color (..), From (..))
 
 data Sdl = Sdl SDL.Window SDL.Renderer
@@ -39,6 +40,24 @@ withSdl :: Text -> (Int, Int) -> (Sdl -> IO a) -> IO a
 withSdl title size = bracket (newSdl title size) dropSdl
 
 -- SDL Functions
+
+handleEvent :: SDL.EventPayload -> IO ()
+handleEvent SDL.QuitEvent = exitSuccess
+handleEvent _ = return ()
+
+mainLoop :: Sdl -> (Sdl -> t -> IO t) -> t -> IO b
+mainLoop s f x = do
+  SDL.pollEvents >>= foldr ((=<<) . return . handleEvent . SDL.eventPayload) (return ())
+
+  clearScreen s
+
+  x' <- f s x
+
+  Sdl.present s
+
+  -- SDL.delay 5000
+
+  mainLoop s f x'
 
 clearScreen :: Sdl -> IO ()
 clearScreen (Sdl _ r) = SDL.rendererDrawColor r $= from White >> SDL.clear r

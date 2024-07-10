@@ -55,12 +55,18 @@ class GameOfLife g where
   join xs ys
     | fits xs ys = joinO (0, 0) ys xs
     | fits ys xs = joinO (0, 0) xs ys
-    | otherwise = error $ "Invalid Join, array sizes are " ++ show (size xs) ++ " and " ++ show (size ys)
+    | otherwise = joinO (0, 0) (expand newSize xs) (expand newSize ys)
+    where
+      newSize = zipWithT2 max (size xs) (size ys)
 
   -- alias for join
   {-# INLINE (<.>) #-}
   (<.>) :: g -> g -> g
   (<.>) = join
+
+{-# INLINE zipWithT2 #-}
+zipWithT2 :: (a -> a -> a) -> (a, a) -> (a, a) -> (a, a)
+zipWithT2 f (i, j) (i', j') = (f i i', f j j')
 
 type Board = Array U DIM2 Life
 

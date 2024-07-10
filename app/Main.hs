@@ -12,7 +12,6 @@ import GameOfLife qualified as GoL
 import Patterns qualified as P
 import SDL qualified
 import Sdl qualified
-import System.Exit (exitSuccess)
 import Types (Life (..))
 import Types qualified
 
@@ -40,131 +39,72 @@ reflectorNE = (GoL.forward 16 . GoL.flipX . GoL.flipY) stopperOsci
 reflectorPrinter :: Board
 reflectorPrinter = GoL.flipX stopperOsci
 
--- testGliderBot :: Board
--- testGliderBot = (GoL.move (26, 15) . GoL.flipX . GoL.flipY) $ GoL.fromPattern P.g2
-
--- testGliderTop :: Board
--- testGliderTop = GoL.move (22, 35) $ GoL.fromPattern P.g3
-
 bottomMachine :: Board
 bottomMachine = reflectorSE <.> GoL.move (27, 45) reflectorNE <.> GoL.move (79, 57) reflectorPrinter
 
 topMachine :: Board
 topMachine = reflectorSW <.> GoL.move (28, 14) reflectorNW
 
-createBoard :: Board -> Board
-createBoard = GoL.join (GoL.empty resolution)
-
 resolution :: (Int, Int)
 resolution = (1920, 1080)
+
+dots :: [Bool]
+-- dots = [True, False, True, False, True, True, False, True, False]
+dots = take 41 $ True <$ [0 :: Int ..]
+
+createPrinter :: [Bool] -> Board
+createPrinter gs = buildGliders (topGliderPlacer l) top (zip [0 ..] first) <.> buildGliders (bottomGliderPlacer l) bottom (enumerate second)
+  where
+    l = length gs
+    (first, second) = splitAt (l `div` 2) gs
+    top = GoL.move (19 + 23 * ((l - 3) `div` 4), 0) topMachine
+    bottom = GoL.move (0, 23 * ((l - 3) `div` 4) - 2) bottomMachine
+
+topGliderPlacer :: (GameOfLife g) => Int -> Int -> g
+topGliderPlacer n i = case (n `div` 2) - (i + 1) of
+  0 -> GoL.move (39 + 23 * ((n - 3) `div` 4), 23) $ GoL.flipY $ GoL.fromPattern P.g3
+  _ -> GoL.move (mapper ((n - 3) `div` 2) i) $ glider i
+  where
+    mapper l j = (26 + 12 * (j `div` 2) + 11 * ((j + 1) `div` 2), 13 + 12 * ((l - (j + 1)) `div` 2) + 11 * ((l - j) `div` 2))
+    glider j = case j `mod` 2 of
+      0 -> GoL.rotate $ GoL.fromPattern P.g2
+      1 -> GoL.rotate $ GoL.fromPattern P.g4
+      _ -> error "Unreachable"
+
+bottomGliderPlacer :: (GameOfLife g) => Int -> Int -> g
+bottomGliderPlacer n i = case (n `div` 2 + 1) - (i + 1) of
+  0 -> GoL.move (20, 27 + 23 * ((n - 3) `div` 4)) . GoL.flipX $ GoL.fromPattern P.g4
+  1 -> GoL.move (31, 39 + 23 * ((n - 3) `div` 4)) . GoL.flipX $ GoL.fromPattern P.g2
+  _ -> GoL.move (mapper ((n - 3) `div` 2) i) $ glider i
+  where
+    mapper l j = (41 + 12 * ((l - j) `div` 2) + 11 * ((l - (i + 1)) `div` 2), 35 + 12 * ((j + 1) `div` 2) + 11 * (j `div` 2))
+    glider j = case j `mod` 2 of
+      0 -> GoL.fromPattern P.g3
+      1 -> GoL.fromPattern P.g1
+      _ -> error "Unreachable"
+
+enumerate :: [a] -> [(Int, a)]
+enumerate = zip [0 ..]
+
+buildGliders :: (GameOfLife g) => (Int -> g) -> g -> [(Int, Bool)] -> g
+buildGliders f = foldr (\(i, b) bs -> if b then f i <.> bs else bs)
 
 pixelSize :: Int
 pixelSize = 2
 
-width :: Int
-width = fst resolution `div` pixelSize
-
-height :: Int
-height = snd resolution `div` pixelSize
-
-cellCount :: Int
-cellCount = height * width
-
-dots :: [Bool]
-dots = take 41 $ True <$ [0 :: Int ..]
-
 main :: IO ()
 main = do
-  Sdl.withSdl "Functional Life" resolution $ flip runLife $ createPrinter dots
+  Sdl.withSdl "Functional Life" resolution (\sdl -> Sdl.mainLoop sdl runLife $ createPrinter dots)
 
-addMiddleGlider :: Board -> Board
-addMiddleGlider = GoL.join ((GoL.move (20, 23) . GoL.flipY) $ GoL.fromPattern P.g3)
-
-addSecondLastGlider :: Board -> Board
-addSecondLastGlider = GoL.join ((GoL.move (31, 41) . GoL.flipX) $ GoL.fromPattern P.g2)
-
-addLastGlider :: Board -> Board
-addLastGlider = GoL.join ((GoL.move (20, 29) . GoL.flipX) $ GoL.fromPattern P.g4)
-
-handleEvent :: SDL.EventPayload -> IO ()
-handleEvent SDL.QuitEvent = exitSuccess
-handleEvent _ = return ()
-
-createPrinter :: [Bool] -> Board
-createPrinter gs = buildTopMachine l (zip [0 ..] first) <.> buildBottomMachine l (zip [0 ..] second)
-  where
-    l = length gs
-    (first, second) = splitAt (l `div` 2) gs
-
-size :: Int -> (Int, Int)
-size l = (41 + (11 + 12) * (((l - 3) `div` 4) - 1) + 1, 13 + ((11 + 12) * ((l - 3) `div` 4)) - 15)
-
-buildTopMachine :: Int -> [(Int, Bool)] -> Board
-buildTopMachine _ [] = error "Invalid glider list"
-buildTopMachine l ((_, b) : []) = GoL.expand (1000, 1000) $ GoL.move (19 + 23 * ((l - 3) `div` 4), 0) $ applyIf b addMiddleGlider topMachine
-buildTopMachine l ((i, b) : bs) = applyIf b (GoL.join (GoL.move (x, y) $ glider Top i)) (buildTopMachine l bs)
-  where
-    startX = 26
-    startY = 13
-    -- (x, y) = (startX + 12 * (i `div` 2) + 11 * ((i + 1) `div` 2), startY + 12 * ((((l - 3) `div` 2) - (i + 1)) `div` 2) + 11 * ((((l - 3) `div` 2) - i) `div` 2))
-    (x, y) = g startX startY l i
-
-buildBottomMachine :: Int -> [(Int, Bool)] -> Board
-buildBottomMachine _ [] = error "Invalid glider list"
-buildBottomMachine l ((_, b2) : ((_, b1) : [])) = GoL.expand (1000, 1000) $ GoL.move (0, 23 * ((l - 3) `div` 4) - 2) $ applyIf b2 addSecondLastGlider $ applyIf b1 addLastGlider bottomMachine
-buildBottomMachine l ((i, b) : bs) = applyIf b (GoL.join (GoL.move (x, y) $ glider Bottom i)) (buildBottomMachine l bs)
-  where
-    startX = 41
-    startY = 35
-    -- (x, y) = (startX + 12 * (i `div` 2) + 11 * ((i + 1) `div` 2), startY + 12 * ((((l - 3) `div` 2) - (i + 1)) `div` 2) + 11 * ((((l - 3) `div` 2) - i) `div` 2))
-    (x, y) = f startX startY l (((l - 3) `div` 2) - 1 - i)
-
-g :: Int -> Int -> Int -> Int -> (Int, Int)
-g sx sy l i = (sx + 12 * (i `div` 2) + 11 * ((i + 1) `div` 2), sy + 12 * ((((l - 3) `div` 2) - (i + 1)) `div` 2) + 11 * ((((l - 3) `div` 2) - i) `div` 2))
-
-f :: (Integral b) => b -> b -> b -> b -> (b, b)
-f sx sy l i = (sx + 12 * ((i + 1) `div` 2) + 11 * (i `div` 2), sy + 12 * ((((l - 3) `div` 2) - i) `div` 2) + 11 * ((((l - 3) `div` 2) - (i + 1)) `div` 2))
-
-data Side = Top | Bottom
-
-glider :: (GameOfLife g) => Side -> Int -> g
-glider Top i = case i `mod` 2 of
-  0 -> GoL.rotate $ GoL.fromPattern P.g2
-  1 -> GoL.rotate $ GoL.fromPattern P.g4
-  _ -> error "Unreachable"
-glider Bottom i = case i `mod` 2 of
-  0 -> GoL.fromPattern P.g3
-  1 -> GoL.fromPattern P.g1
-  _ -> error "Unreachable"
-
-applyIf :: Bool -> (a -> a) -> a -> a
-applyIf False = const id
-applyIf True = id
-
-allRef :: Board
-allRef = GoL.move (50, 50) $ createBoard (GoL.move (w, 0) (addMiddleGlider topMachine)) <.> GoL.move (0, h) ((addLastGlider . addSecondLastGlider) bottomMachine)
-  where
-    (w, h) = size $ length dots
-
-runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO ()
+runLife :: Sdl.Sdl -> Array U DIM2 Life -> IO Board
 runLife g b = do
-  SDL.pollEvents >>= foldr ((=<<) . return . handleEvent . SDL.eventPayload) (return ())
-
-  Sdl.clearScreen g
-
   alive <- Repa.selectP (Types.from . Repa.linearIndex b) (coordinatesOfLinearIndex b) (Repa.size (Repa.extent b))
 
   rectangles <- Repa.computeP $ Repa.map (rectangle pixelSize) alive
 
   Sdl.fillRectangles g $ Repa.toVector rectangles
 
-  b' <- Repa.computeUnboxedP $ GoL.processLives b
-
-  Sdl.present g
-
-  -- SDL.delay 100
-
-  runLife g b'
+  Repa.computeUnboxedP $ GoL.processLives b
 
 {-# INLINE coordinatesOfLinearIndex #-}
 coordinatesOfLinearIndex :: (Source r e) => Array r DIM2 e -> Int -> (Int, Int)
