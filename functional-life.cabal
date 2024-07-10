@@ -66,6 +66,7 @@ executable functional-life
         Types,
         Patterns,
         GameOfLife,
+        Printer,
 
     -- LANGUAGE extensions used by modules in this package.
     default-extensions:

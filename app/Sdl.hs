@@ -40,7 +40,6 @@ withSdl :: Text -> (Int, Int) -> (Sdl -> IO a) -> IO a
 withSdl title size = bracket (newSdl title size) dropSdl
 
 -- SDL Functions
-
 handleEvent :: SDL.EventPayload -> IO ()
 handleEvent SDL.QuitEvent = exitSuccess
 handleEvent _ = return ()
@@ -64,6 +63,10 @@ clearScreen (Sdl _ r) = SDL.rendererDrawColor r $= from White >> SDL.clear r
 
 fillRectangles :: Sdl -> Vector (SDL.Rectangle CInt) -> IO ()
 fillRectangles (Sdl _ r) rects = SDL.rendererDrawColor r $= from Black >> SDL.fillRects r (Vector.convert rects)
+
+{-# INLINE rectangle #-}
+rectangle :: Int -> (Int, Int) -> SDL.Rectangle CInt
+rectangle !ps (!x, !y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (x * ps) (y * ps)) (fromIntegral <$> SDL.V2 ps ps)
 
 present :: Sdl -> IO ()
 present (Sdl _ r) = SDL.present r
