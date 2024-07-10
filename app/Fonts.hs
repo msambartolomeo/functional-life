@@ -1,0 +1,113 @@
+module Fonts where
+
+data Font = A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8 | N9 | N0 | Undefined
+
+getRepresentation :: Font -> [[Bool]]
+getRepresentation A = [[True, True, True], [True, False, True], [True, True, True], [True, False, True]]
+getRepresentation B = [[True, True, False], [True, True, True], [True, False, True], [True, True, True]]
+getRepresentation C = [[True, True, True], [True, False, False], [True, False, False], [True, True, True]]
+getRepresentation D = [[True, True, False], [True, False, True], [True, False, True], [True, True, False]]
+getRepresentation E = [[True, True, True], [True, True, False], [True, False, False], [True, True, True]]
+getRepresentation F = [[True, True, True], [True, False, False], [True, True, False], [True, True, True]]
+getRepresentation G = [[True, True, True], [True, False, False], [True, False, True], [True, True, True]]
+getRepresentation H = [[True, False, True], [True, True, True], [True, False, True], [True, False, True]]
+getRepresentation I = [[True, True, True], [False, True, False], [False, True, False], [True, True, True]]
+getRepresentation J = [[True, True, True], [False, True, False], [False, True, False], [True, True, False]]
+getRepresentation K = [[True, False, True], [True, True, False], [True, True, False], [True, False, True]]
+getRepresentation L = [[True, False, False], [True, False, False], [True, False, False], [True, True, True]]
+getRepresentation M = [[True, True, True], [True, True, True], [True, True, True], [True, False, True]]
+getRepresentation N = [[True, True, True], [True, False, True], [True, False, True], [True, False, True]]
+getRepresentation O = [[True, True, True], [True, False, True], [True, False, True], [True, True, True]]
+getRepresentation P = [[True, True, True], [True, False, True], [True, True, True], [True, False, False]]
+getRepresentation Q = [[True, True, True], [True, False, True], [True, True, True], [False, False, True]]
+getRepresentation R = [[True, True, True], [True, True, True], [True, True, False], [True, False, True]]
+getRepresentation S = [[True, True, True], [True, False, False], [False, True, True], [True, True, True]]
+getRepresentation T = [[True, True, True], [False, True, False], [False, True, False], [False, True, False]]
+getRepresentation U = [[True, False, True], [True, False, True], [True, False, True], [True, True, True]]
+getRepresentation V = [[True, False, True], [True, False, True], [True, False, True], [False, True, False]]
+getRepresentation W = [[True, False, True], [True, True, True], [True, True, True], [True, True, True]]
+getRepresentation X = [[True, False, True], [True, True, False], [False, True, True], [True, False, True]]
+getRepresentation Y = [[True, False, True], [True, True, True], [False, True, False], [False, True, False]]
+getRepresentation Z = [[True, True, True], [False, True, True], [True, False, False], [True, True, True]]
+getRepresentation N1 = [[False, True, True], [False, False, True], [False, False, True], [False, False, True]]
+getRepresentation N2 = [[True, True, True], [False, False, True], [True, True, False], [True, True, True]]
+getRepresentation N3 = [[True, True, True], [False, True, True], [False, False, True], [True, True, True]]
+getRepresentation N4 = [[True, False, True], [True, False, True], [True, True, True], [False, False, True]]
+getRepresentation N5 = [[True, True, True], [True, True, False], [False, False, True], [True, True, True]]
+getRepresentation N6 = [[True, True, True], [True, False, False], [True, True, True], [True, True, True]]
+getRepresentation N7 = [[True, True, True], [False, False, True], [False, True, True], [False, False, True]]
+getRepresentation N8 = [[True, True, True], [True, True, True], [True, False, True], [True, True, True]]
+getRepresentation N9 = [[True, True, True], [True, True, True], [False, False, True], [True, True, True]]
+getRepresentation N0 = [[True, True, True], [True, False, True], [True, False, True], [True, True, True]]
+getRepresentation Undefined = [[True, True, True], [True, True, True], [True, True, True], [True, True, True]]
+
+fromChar :: Char -> Font
+fromChar 'a' = A
+fromChar 'b' = B
+fromChar 'c' = C
+fromChar 'd' = D
+fromChar 'e' = E
+fromChar 'f' = F
+fromChar 'g' = G
+fromChar 'h' = H
+fromChar 'i' = I
+fromChar 'j' = J
+fromChar 'k' = K
+fromChar 'l' = L
+fromChar 'm' = M
+fromChar 'n' = N
+fromChar 'o' = O
+fromChar 'p' = P
+fromChar 'q' = Q
+fromChar 'r' = R
+fromChar 's' = S
+fromChar 't' = T
+fromChar 'u' = U
+fromChar 'v' = V
+fromChar 'w' = W
+fromChar 'x' = X
+fromChar 'y' = Y
+fromChar 'z' = Z
+fromChar 'A' = A
+fromChar 'B' = B
+fromChar 'C' = C
+fromChar 'D' = D
+fromChar 'E' = E
+fromChar 'F' = F
+fromChar 'G' = G
+fromChar 'H' = H
+fromChar 'I' = I
+fromChar 'J' = J
+fromChar 'K' = K
+fromChar 'L' = L
+fromChar 'M' = M
+fromChar 'N' = N
+fromChar 'O' = O
+fromChar 'P' = P
+fromChar 'Q' = Q
+fromChar 'R' = R
+fromChar 'S' = S
+fromChar 'T' = T
+fromChar 'U' = U
+fromChar 'V' = V
+fromChar 'W' = W
+fromChar 'X' = X
+fromChar 'Y' = Y
+fromChar 'Z' = Z
+fromChar '1' = N1
+fromChar '2' = N2
+fromChar '3' = N3
+fromChar '4' = N4
+fromChar '5' = N5
+fromChar '6' = N6
+fromChar '7' = N7
+fromChar '8' = N8
+fromChar '9' = N9
+fromChar '0' = N0
+fromChar _ = Undefined
+
+fromString :: [Char] -> [Font]
+fromString = map fromChar
+
+fontLines :: [Font] -> [[Bool]]
+fontLines = foldr1 (zipWith . flip $ flip (++) . (False :)) . map getRepresentation
