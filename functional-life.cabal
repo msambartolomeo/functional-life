@@ -81,6 +81,7 @@ executable functional-life
         repa ^>=3.4.1.5,
         sdl2 ^>=2.5.5.0,
         vector-th-unbox ^>= 0.2.2,
+        ReadArgs ^>=1.2.3,
         text,
         vector,
 
