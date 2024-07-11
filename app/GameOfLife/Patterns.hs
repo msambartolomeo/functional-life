@@ -1,4 +1,4 @@
-module Patterns where
+module GameOfLife.Patterns where
 
 import Types (Life (..))
 

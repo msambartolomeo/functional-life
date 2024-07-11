@@ -64,8 +64,9 @@ executable functional-life
     other-modules:
         Sdl,
         Types,
-        Patterns,
-        GameOfLife,
+        GameOfLife.Base,
+        GameOfLife.Patterns,
+        GameOfLife.Repa,
         Printer,
         Fonts,
 

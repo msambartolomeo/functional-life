@@ -8,7 +8,7 @@ import Foreign.C (CInt)
 import SDL (($=))
 import SDL qualified
 import System.Exit (exitSuccess)
-import Types (Color (..), From (..))
+import Types (Color (..), coerce)
 
 data Sdl = Sdl SDL.Window SDL.Renderer
 
@@ -54,19 +54,17 @@ mainLoop s f x = do
 
   Sdl.present s
 
-  -- SDL.delay 50
-
   mainLoop s f x'
 
 clearScreen :: Sdl -> IO ()
-clearScreen (Sdl _ r) = SDL.rendererDrawColor r $= from White >> SDL.clear r
+clearScreen (Sdl _ r) = SDL.rendererDrawColor r $= coerce White >> SDL.clear r
 
 fillRectangles :: Sdl -> Vector (SDL.Rectangle CInt) -> IO ()
-fillRectangles (Sdl _ r) rects = SDL.rendererDrawColor r $= from Black >> SDL.fillRects r (Vector.convert rects)
+fillRectangles (Sdl _ r) rects = SDL.rendererDrawColor r $= coerce Black >> SDL.fillRects r (Vector.convert rects)
+
+present :: Sdl -> IO ()
+present (Sdl _ r) = SDL.present r
 
 {-# INLINE rectangle #-}
 rectangle :: Int -> (Int, Int) -> SDL.Rectangle CInt
 rectangle !ps (!x, !y) = SDL.Rectangle (SDL.P $ fromIntegral <$> SDL.V2 (x * ps) (y * ps)) (fromIntegral <$> SDL.V2 ps ps)
-
-present :: Sdl -> IO ()
-present (Sdl _ r) = SDL.present r

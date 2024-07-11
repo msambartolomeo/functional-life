@@ -127,5 +127,5 @@ fromChar _ = Undefined
 fromString :: [Char] -> [Font]
 fromString = map fromChar
 
-fontLines :: [Font] -> [[Bool]]
-fontLines = foldr1 (zipWith . flip $ flip (++) . (False :)) . map getRepresentation
+joinRepresentation :: [Font] -> [[Bool]]
+joinRepresentation = foldr1 (zipWith . flip $ flip (++) . (False :)) . map getRepresentation
