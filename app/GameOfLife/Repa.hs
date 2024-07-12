@@ -3,16 +3,11 @@ module GameOfLife.Repa where
 import Data.Array.Repa (Array, D, DIM2, Source, U, Z (..), (:.) (..))
 import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Unsafe qualified as Repa
-import Data.Coerce (coerce)
 import GameOfLife.Base (GameOfLife (..))
-import GameOfLife.Life (Life (..), joinLife, liveOrDie)
-import GameOfLife.Life qualified as L
+import GameOfLife.Life (Life (..), joinLife, liveOrDie, coerce)
 import GameOfLife.Patterns (Pattern)
 
-newtype RepaGoL = R (Array U DIM2 Life)
-
-extract :: RepaGoL -> Array U DIM2 Life
-extract = coerce
+newtype RepaGoL = R {extract :: Array U DIM2 Life}
 
 toTuple :: DIM2 -> (Int, Int)
 toTuple (Z :. j :. i) = (i, j)
@@ -28,7 +23,7 @@ instance GameOfLife RepaGoL where
 
   {-# INLINE size #-}
   size :: RepaGoL -> (Int, Int)
-  size = toTuple . Repa.extent . coerce
+  size = toTuple . Repa.extent . extract
 
   {-# INLINE joinO #-}
   joinO :: (Int, Int) -> RepaGoL -> RepaGoL -> RepaGoL
@@ -50,13 +45,13 @@ instance GameOfLife RepaGoL where
 
   {-# INLINE transpose #-}
   transpose :: RepaGoL -> RepaGoL
-  transpose = coerce . Repa.computeS . Repa.transpose . coerce
+  transpose = R . Repa.computeS . Repa.transpose . extract
 
   -- Does not expand, should stay inside size
   {-# INLINE forward #-}
   forward :: Int -> RepaGoL -> RepaGoL
   forward 0 = id
-  forward n = forward (n - 1) . coerce . Repa.computeS . processLives . coerce
+  forward n = forward (n - 1) . R . Repa.computeS . processLives . extract
 
 {-# INLINE coordinatesOfLinearIndex #-}
 coordinatesOfLinearIndex :: (Source r e) => Array r DIM2 e -> Int -> (Int, Int)
@@ -74,7 +69,7 @@ processLives !xs = Repa.unsafeTraverse xs id $ processLife $ toTuple $ Repa.exte
 processLife :: (Int, Int) -> (DIM2 -> Life) -> DIM2 -> Life
 processLife si !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + nw)
   where
-    !indexer = L.coerce . safeIndex si f
+    !indexer = coerce . safeIndex si f
     !c = f (Z :. j :. i)
     !n = indexer (i, j - 1)
     !ne = indexer (i + 1, j - 1)
