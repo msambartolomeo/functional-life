@@ -5,9 +5,9 @@ import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Unsafe qualified as Repa
 import Data.Coerce (coerce)
 import GameOfLife.Base (GameOfLife (..))
+import GameOfLife.Life (Life (..), joinLife, liveOrDie)
+import GameOfLife.Life qualified as L
 import GameOfLife.Patterns (Pattern)
-import Types (Life (..))
-import Types qualified as T
 
 newtype RepaGoL = R (Array U DIM2 Life)
 
@@ -32,7 +32,7 @@ instance GameOfLife RepaGoL where
 
   {-# INLINE joinO #-}
   joinO :: (Int, Int) -> RepaGoL -> RepaGoL -> RepaGoL
-  joinO (wo, ho) (R xs) (R ys) = R . Repa.computeS $ Repa.traverse2 xs ys const (\f g i -> safe g (toTuple i) `T.joinLife` f i)
+  joinO (wo, ho) (R xs) (R ys) = R . Repa.computeS $ Repa.traverse2 xs ys const (\f g i -> safe g (toTuple i) `joinLife` f i)
     where
       safe g (i, j) = safeIndex (toTuple $ Repa.extent ys) g (i - wo, j - ho)
 
@@ -74,7 +74,7 @@ processLives !xs = Repa.unsafeTraverse xs id $ processLife $ toTuple $ Repa.exte
 processLife :: (Int, Int) -> (DIM2 -> Life) -> DIM2 -> Life
 processLife si !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + nw)
   where
-    !indexer = T.coerce . safeIndex si f
+    !indexer = L.coerce . safeIndex si f
     !c = f (Z :. j :. i)
     !n = indexer (i, j - 1)
     !ne = indexer (i + 1, j - 1)
@@ -84,9 +84,3 @@ processLife si !f (Z :. !j :. !i) = liveOrDie c (n + ne + e + se + s + sw + w + 
     !sw = indexer (i - 1, j + 1)
     !w = indexer (i - 1, j)
     !nw = indexer (i - 1, j - 1)
-
-{-# INLINE liveOrDie #-}
-liveOrDie :: Life -> Int -> Life
-liveOrDie _ 3 = O
-liveOrDie O 2 = O
-liveOrDie _ _ = X

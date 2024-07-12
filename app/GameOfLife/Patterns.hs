@@ -1,6 +1,6 @@
 module GameOfLife.Patterns where
 
-import Types (Life (..))
+import GameOfLife.Life (Life (..))
 
 type Pattern = [[Life]]
 

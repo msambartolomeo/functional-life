@@ -4,11 +4,19 @@ import Control.Exception (bracket)
 import Data.Text (Text)
 import Data.Vector (Vector)
 import Data.Vector qualified as Vector
+import Data.Word (Word8)
 import Foreign.C (CInt)
 import SDL (($=))
 import SDL qualified
 import System.Exit (exitSuccess)
-import Types (Color (..), coerce)
+
+data Color = White | Black
+
+{-# INLINE fromColor #-}
+fromColor :: Color -> SDL.V4 Word8
+--                       R   G   B   a
+fromColor White = SDL.V4 255 255 255 255
+fromColor Black = SDL.V4 0 0 0 255
 
 data Sdl = Sdl SDL.Window SDL.Renderer
 
@@ -57,10 +65,10 @@ mainLoop s f x = do
   mainLoop s f x'
 
 clearScreen :: Sdl -> IO ()
-clearScreen (Sdl _ r) = SDL.rendererDrawColor r $= coerce White >> SDL.clear r
+clearScreen (Sdl _ r) = SDL.rendererDrawColor r $= fromColor White >> SDL.clear r
 
 fillRectangles :: Sdl -> Vector (SDL.Rectangle CInt) -> IO ()
-fillRectangles (Sdl _ r) rects = SDL.rendererDrawColor r $= coerce Black >> SDL.fillRects r (Vector.convert rects)
+fillRectangles (Sdl _ r) rects = SDL.rendererDrawColor r $= fromColor Black >> SDL.fillRects r (Vector.convert rects)
 
 present :: Sdl -> IO ()
 present (Sdl _ r) = SDL.present r

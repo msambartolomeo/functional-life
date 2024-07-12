@@ -63,10 +63,10 @@ executable functional-life
     -- Modules included in this executable, other than Main.
     other-modules:
         Sdl,
-        Types,
         GameOfLife.Base,
         GameOfLife.Patterns,
         GameOfLife.Repa,
+        GameOfLife.Life,
         Printer,
         Fonts,
 

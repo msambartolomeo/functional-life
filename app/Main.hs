@@ -5,12 +5,12 @@ import Data.Array.Repa qualified as Repa
 import Data.Array.Repa.Repr.Vector qualified as Repa
 import Data.Maybe (fromMaybe)
 import Fonts qualified
+import GameOfLife.Life (Life, coerce)
 import GameOfLife.Repa qualified as GoL
 import Printer qualified
 import ReadArgs (readArgs)
 import Sdl (Sdl)
 import Sdl qualified
-import Types (Life, coerce)
 
 main :: IO ()
 main = do
