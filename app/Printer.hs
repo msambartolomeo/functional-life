@@ -22,12 +22,9 @@ firstNToBack n = uncurry (++) . swap . splitAt n
 
 -- Glider count must satisfy the condition (l `mod` 4) + 4 = 5 for the machine to work
 -- If there are not enough gliders, Falses are added at the end
--- At least 6 Falses are added always as separation
+-- At least 21 Falses are added always as separation
 forceGliderCount :: [Bool] -> Int -> (Int, [Bool])
 forceGliderCount gs l = (l + (21 - l `mod` 4), take (21 - l `mod` 4) (False <$ [0 :: Int ..]) ++ gs)
-
--- forceGliderCount [] n = (n + 13 - (n `mod` 4), take (13 - (n `mod` 4)) (False <$ [0 :: Int ..]))
--- forceGliderCount (x : xs) n = let (l, xs') = forceGliderCount xs (n + 1) in (l, x : xs')
 
 buildGliders :: (GameOfLife g) => (Int -> g) -> g -> [(Int, Bool)] -> g
 buildGliders f = foldr (\(i, b) bs -> if b then f i <.> bs else bs)
@@ -55,29 +52,29 @@ bottomGliderPlacer n i = case (n `div` 2 + 1) - (i + 1) of
       1 -> GoL.fromPattern P.g1
       _ -> error "Unreachable"
 
-doubleOsci :: (GameOfLife g) => g
-doubleOsci = top_refector <.> GoL.move (8, 21) bottom_reflector
+doubleOscilator :: (GameOfLife g) => g
+doubleOscilator = top_refector <.> GoL.move (8, 21) bottom_reflector
   where
     top_refector = GoL.fromPattern P.reflector
     bottom_reflector = GoL.flipX top_refector
 
-stopperOsci :: (GameOfLife g) => g
-stopperOsci = GoL.fromPattern P.reflector <.> GoL.move (9, 27) (GoL.fromPattern P.box)
+oscilator :: (GameOfLife g) => g
+oscilator = GoL.fromPattern P.reflector <.> GoL.move (9, 27) (GoL.fromPattern P.box)
 
 reflectorNW :: (GameOfLife g) => g
-reflectorNW = (GoL.forward 19 . GoL.flipY) stopperOsci
+reflectorNW = (GoL.forward 19 . GoL.flipY) oscilator
 
 reflectorSW :: (GameOfLife g) => g
-reflectorSW = (GoL.forward 4 . GoL.transpose . GoL.flipY . GoL.flipX) stopperOsci
+reflectorSW = (GoL.forward 4 . GoL.transpose . GoL.flipY . GoL.flipX) oscilator
 
 reflectorSE :: (GameOfLife g) => g
-reflectorSE = GoL.forward 3 doubleOsci
+reflectorSE = GoL.forward 3 doubleOscilator
 
 reflectorNE :: (GameOfLife g) => g
-reflectorNE = (GoL.forward 16 . GoL.flipX . GoL.flipY) stopperOsci
+reflectorNE = (GoL.forward 16 . GoL.flipX . GoL.flipY) oscilator
 
 reflectorPrinter :: (GameOfLife g) => g
-reflectorPrinter = GoL.flipX stopperOsci
+reflectorPrinter = GoL.flipX oscilator
 
 bottomMachine :: (GameOfLife g) => g
 bottomMachine = reflectorSE <.> GoL.move (27, 45) reflectorNE <.> GoL.move (79, 57) reflectorPrinter
